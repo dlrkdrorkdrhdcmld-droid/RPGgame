@@ -35,9 +35,10 @@ function setup(){
 function enter(a){
   A.area=a;
   if(["rabbit","zombie","goblin","wolf","slime","thief","golem"].includes(a)){A.x=340;A.y=335}
+  else if(a==="crossroads"){A.x=576;A.y=120}
   else {A.x=576;A.y=324}
   setup();
-  if(a!=="village")say(({rabbit:"토끼 사냥터",zombie:"좀비 사냥터",goblin:"고블린 사냥터",wolf:"늑대 사냥터",slime:"폭발 슬라임 사냥터",thief:"도적 사냥터",golem:"골렘 사냥터",mine:"광산",farm:"농장",fishing:"낚시터",tower:"탑"})[a]||a)
+  if(a!=="village")say(({rabbit:"토끼 사냥터",zombie:"좀비 사냥터",goblin:"고블린 사냥터",wolf:"늑대 사냥터",slime:"폭발 슬라임 사냥터",thief:"도적 사냥터",mine:"광산",farm:"농장",fishing:"낚시터",tower:"탑",crossroads:"갈림길"})[a]||a)
 }
 function damage(raw){let red=Math.min(.9,A.st.def/100);A.hp-=Math.max(1,Math.floor(raw*(1-red)));if(A.hp<=0)die()}
 function die(){A.dead++;A.exp=0;A.g=Math.floor(A.g*.9);A.hp=hpmax();A.mp=mpmax();A.area="village";setup();A.x=576;A.y=324;panel("사망","<p>레벨 유지 · EXP 0 · 골드 10% 감소</p>"+B("마을로 돌아가기","close")+B("게임 종료","quit"));document.getElementById("close").onclick=close;document.getElementById("quit").onclick=()=>location.reload();check()}
@@ -114,6 +115,14 @@ function nearRect(x,y,w,h,pad=18){
   return A.x>=x-pad&&A.x<=x+w+pad&&A.y>=y-pad&&A.y<=y+h+pad;
 }
 function interact(){
+  if(A.area==="crossroads"){
+    if(A.y<190){enter("village");return}
+    if(A.x<220&&A.y>220&&A.y<500){enter("mine");return}
+    if(A.x>900&&A.y>220&&A.y<500){enter("fishing");return}
+    if(A.x>380&&A.x<760&&A.y>500){enter("tower");return}
+    say("이동 지점에서 F를 눌러주세요.");
+    return;
+  }
   if(A.area!=="village"){
     if(A.area==="tower"){if(mobs.length===0)setup();return}
     if(A.area==="mine"){mine();return}
@@ -142,7 +151,7 @@ function interact(){
     return;
   }
 
-  if(nearRect(483,572,235,54)){say("갈림길");return;}
+  if(nearRect(483,572,235,54)){enter("crossroads");return;}
   if(Math.hypot(A.x-810,A.y-600)<55){questBoard();return;}
 
   say("이곳에서는 할 수 있는 일이 없습니다.");
@@ -258,6 +267,30 @@ function outlineNode(x,y,w,h,color){
 
   // 몬스터 스폰 구역
   X.strokeStyle="#ff8c00";X.lineWidth=12;X.beginPath();X.roundRect(570,65,620,555,24);X.stroke();X.lineWidth=1;
-}function drawFarm(){X.fillStyle="#75623e";X.fillRect(0,0,W,H);for(let y=80;y<590;y+=90)for(let x=80;x<1080;x+=180)rect(x,y,135,55,"#8b6b43");label("농장",576,40,22);label("세부 배치는 미정",576,620,14)}function drawMine(){X.fillStyle="#444";X.fillRect(0,0,W,H);for(let i=0;i<28;i++){let x=(i*97)%W,y=70+((i*71)%500);X.fillStyle=i%5===0?"#8b6b45":"#555";X.beginPath();X.arc(x,y,20,0,7);X.fill()}label("광산",576,40,22);label("광맥 배치는 게임 진행 중 랜덤",576,620,14)}function drawFishing(){X.fillStyle="#477ea0";X.fillRect(0,0,W,H);X.fillStyle="#5c9460";X.fillRect(0,0,210,H);X.fillRect(942,0,210,H);for(let y=60;y<H;y+=55){X.strokeStyle="rgba(255,255,255,.15)";X.beginPath();X.moveTo(220,y);X.quadraticCurveTo(576,y+18,932,y);X.stroke()}label("낚시터",576,42,22);label("민물 + 바닷물",576,70,14)}function drawTower(){X.fillStyle="#302d3a";X.fillRect(0,0,W,H);for(let x=0;x<W;x+=96)for(let y=0;y<H;y+=96){X.strokeStyle="rgba(255,255,255,.08)";X.strokeRect(x,y,96,96)}rect(430,90,292,470,"#4a4654","#9a8faa");label("탑",576,125,28);label("층 "+Math.min(A.tower+1,10),576,155,18);label("미정 공간",576,610,14)}function drawMap(){if(A.area==="village")drawVillage();else if(["rabbit","zombie","goblin","wolf","slime","thief","golem"].includes(A.area))drawHunt();else if(A.area==="farm")drawFarm();else if(A.area==="mine")drawMine();else if(A.area==="fishing")drawFishing();else if(A.area==="tower")drawTower();else{X.fillStyle="#4b493f";X.fillRect(0,0,W,H)}}function draw(){drawMap();for(const m of mobs){X.fillStyle=m.t==="rabbit"?"#d9d9d9":m.t==="wolf"?"#888":m.t==="golem"?"#a77b55":m.t==="boss"?"#b84b8b":"#67a85f";X.beginPath();X.arc(m.x,m.y,m.t==="boss"?30:18,0,7);X.fill()}X.fillStyle=["rabbit","zombie","goblin","wolf","slime","thief","golem"].includes(A.area)?"#7ee000":"#4ca6ff";X.beginPath();X.arc(A.x,A.y,16,0,7);X.fill();if(mt>performance.now()){X.fillStyle="#fff";X.font="20px sans-serif";X.textAlign="center";X.fillText(msg,W/2,H-40)}document.getElementById("level").textContent="Lv."+A.lv;document.getElementById("exp").textContent="EXP "+A.exp+"/"+A.next;document.getElementById("gold").textContent="G "+A.g;document.getElementById("weapon").textContent=WD[A.wep][0]+" +"+(A.enh[A.wep]||0);document.getElementById("hpbar").style.width=A.hp/hpmax()*100+"%";document.getElementById("mpbar").style.width=A.mp/mpmax()*100+"%";document.getElementById("hptext").textContent="HP "+Math.floor(A.hp)+"/"+hpmax();document.getElementById("mptext").textContent="MP "+Math.floor(A.mp)+"/"+mpmax()}
+}function drawCrossroads(){
+  X.fillStyle="#000000";X.fillRect(0,0,W,H);
+
+  // 갈림길 외곽
+  X.strokeStyle="#e5c43b";X.lineWidth=3;X.strokeRect(65,35,W-130,H-70);X.lineWidth=1;
+
+  // 하얀색: 마을 방향
+  X.strokeStyle="#eeeeee";X.lineWidth=4;X.beginPath();
+  X.roundRect(255,85,280,95,16);X.stroke();
+
+  // 회색: 광산
+  X.strokeStyle="#777777";X.beginPath();
+  X.roundRect(95,175,90,245,12);X.stroke();
+
+  // 파란색: 낚시터
+  X.strokeStyle="#1746b8";X.beginPath();
+  X.roundRect(930,165,90,245,12);X.stroke();
+
+  // 하늘색: 탑
+  X.strokeStyle="#19cfe0";X.beginPath();
+  X.roundRect(275,430,250,105,16);X.stroke();
+
+  X.lineWidth=1;
+}
+function drawFarm(){X.fillStyle="#75623e";X.fillRect(0,0,W,H);for(let y=80;y<590;y+=90)for(let x=80;x<1080;x+=180)rect(x,y,135,55,"#8b6b43");label("농장",576,40,22);label("세부 배치는 미정",576,620,14)}function drawMine(){X.fillStyle="#444";X.fillRect(0,0,W,H);for(let i=0;i<28;i++){let x=(i*97)%W,y=70+((i*71)%500);X.fillStyle=i%5===0?"#8b6b45":"#555";X.beginPath();X.arc(x,y,20,0,7);X.fill()}label("광산",576,40,22);label("광맥 배치는 게임 진행 중 랜덤",576,620,14)}function drawFishing(){X.fillStyle="#477ea0";X.fillRect(0,0,W,H);X.fillStyle="#5c9460";X.fillRect(0,0,210,H);X.fillRect(942,0,210,H);for(let y=60;y<H;y+=55){X.strokeStyle="rgba(255,255,255,.15)";X.beginPath();X.moveTo(220,y);X.quadraticCurveTo(576,y+18,932,y);X.stroke()}label("낚시터",576,42,22);label("민물 + 바닷물",576,70,14)}function drawTower(){X.fillStyle="#302d3a";X.fillRect(0,0,W,H);for(let x=0;x<W;x+=96)for(let y=0;y<H;y+=96){X.strokeStyle="rgba(255,255,255,.08)";X.strokeRect(x,y,96,96)}rect(430,90,292,470,"#4a4654","#9a8faa");label("탑",576,125,28);label("층 "+Math.min(A.tower+1,10),576,155,18);label("미정 공간",576,610,14)}function drawMap(){if(A.area==="village")drawVillage();else if(["rabbit","zombie","goblin","wolf","slime","thief","golem"].includes(A.area))drawHunt();else if(A.area==="crossroads")drawCrossroads();else if(A.area==="farm")drawFarm();else if(A.area==="mine")drawMine();else if(A.area==="fishing")drawFishing();else if(A.area==="tower")drawTower();else{X.fillStyle="#4b493f";X.fillRect(0,0,W,H)}}function draw(){drawMap();for(const m of mobs){X.fillStyle=m.t==="rabbit"?"#d9d9d9":m.t==="wolf"?"#888":m.t==="golem"?"#a77b55":m.t==="boss"?"#b84b8b":"#67a85f";X.beginPath();X.arc(m.x,m.y,m.t==="boss"?30:18,0,7);X.fill()}X.fillStyle=["rabbit","zombie","goblin","wolf","slime","thief","golem"].includes(A.area)?"#7ee000":"#4ca6ff";X.beginPath();X.arc(A.x,A.y,16,0,7);X.fill();if(mt>performance.now()){X.fillStyle="#fff";X.font="20px sans-serif";X.textAlign="center";X.fillText(msg,W/2,H-40)}document.getElementById("level").textContent="Lv."+A.lv;document.getElementById("exp").textContent="EXP "+A.exp+"/"+A.next;document.getElementById("gold").textContent="G "+A.g;document.getElementById("weapon").textContent=WD[A.wep][0]+" +"+(A.enh[A.wep]||0);document.getElementById("hpbar").style.width=A.hp/hpmax()*100+"%";document.getElementById("mpbar").style.width=A.mp/mpmax()*100+"%";document.getElementById("hptext").textContent="HP "+Math.floor(A.hp)+"/"+hpmax();document.getElementById("mptext").textContent="MP "+Math.floor(A.mp)+"/"+mpmax()}
 function load(){let s=localStorage.getItem("rpg-1");if(s)try{Object.assign(A,JSON.parse(s))}catch(e){}A.hp=A.hp||100;A.mp=A.mp||100;A.inv=A.inv||{};A.enh=A.enh||{};A.st=A.st||{atk:0,def:0,hp:0,int:0,agi:0,luk:0};setup()}
 window.onkeydown=e=>{K[e.key]=1;if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();if(e.key.toLowerCase()==="f"&&!e.repeat)interact();if(e.key.toLowerCase()==="e"&&!e.repeat&&!modal)status();if(e.key==="Escape"&&!e.repeat)(modal?close():menu())};window.onkeyup=e=>K[e.key]=0;load();setInterval(()=>localStorage.setItem("rpg-autosave",JSON.stringify(A)),30000);window.onbeforeunload=()=>localStorage.setItem("rpg-autosave",JSON.stringify(A));function loop(n){let d=Math.min(.05,(n-last)/1000);last=n;update(d);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
