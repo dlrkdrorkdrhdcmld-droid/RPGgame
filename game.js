@@ -42,64 +42,55 @@ function village(){panel("마을",B("사냥터","hunt")+B("상점","shop")+B("�
 function interact(){if(A.area==="village")village();else if(A.area==="mine")mine(),enter("village");else if(A.area==="fishing")fish();else if(A.area==="farm")farm();else if(A.area==="tower"){if(mobs.length===0)setup()}else enter("village")}
 function update(dt){if(modal)return;A.hp=Math.min(hpmax(),A.hp+dt/(A.st.hp>=100?5:10));A.mp=Math.min(mpmax(),A.mp+dt/(A.st.int>=100?.5:1));let dx=0,dy=0;if(K.a)dx--;if(K.d)dx++;if(K.w)dy--;if(K.s)dy++;if(dx||dy){let l=Math.hypot(dx,dy);A.x+=dx/l*spd()*dt;A.y+=dy/l*spd()*dt}if(K[" "])attack();if(K.q)skill();for(const m of mobs){if(m.hp<=0)continue;let d=M[m.t],dx=A.x-m.x,dy=A.y-m.y,di=Math.hypot(dx,dy);if(m.t==="rabbit"){if(di<250&&di>0){m.x-=dx/di*d[4]*40*dt;m.y-=dy/di*d[4]*40*dt;m.x=Math.max(25,Math.min(W-25,m.x));m.y=Math.max(25,Math.min(H-25,m.y))}}else if(m.t==="goblinR"){if(di<180){m.x-=dx/di*d[4]*35*dt;m.y-=dy/di*d[4]*35*dt}}else if(d){if(di>45){m.x+=dx/di*d[4]*35*dt;m.y+=dy/di*d[4]*35*dt}m.cd-=dt;if(di<45&&m.cd<=0){m.cd=1.5;damage(d[2])}}}mobs=mobs.filter(m=>m.hp>0)}
 function rect(x,y,w,h,fill,stroke){X.fillStyle=fill;X.fillRect(x,y,w,h);if(stroke){X.strokeStyle=stroke;X.strokeRect(x,y,w,h)}}function label(t,x,y,size=16,align="center"){X.fillStyle="#fff";X.font=size+"px sans-serif";X.textAlign=align;X.fillText(t,x,y)}function path(x1,y1,x2,y2,w=70){X.strokeStyle="#b89b70";X.lineWidth=w;X.lineCap="round";X.beginPath();X.moveTo(x1,y1);X.lineTo(x2,y2);X.stroke();X.lineWidth=1}function drawVillage(){
-  // 마을 배치도는 시설의 "대략적인 위치 관계"만 반영한다.
-  // 실제 지형은 자연스럽게 만들고, 미정 영역은 비워 둔다.
+  // 배치도는 시설의 대략적인 위치 관계만 반영하고, 실제 지형은 자연스럽게 구성한다.
   X.fillStyle="#7aa66a";X.fillRect(0,0,W,H);
 
-  // 잔디에 작은 장식
   for(let i=0;i<70;i++){
     const x=(i*173)%W, y=(i*97)%H;
-    X.fillStyle=i%3===0?"#6f9861":"#82ad72";
-    X.fillRect(x,y,3,3);
+    X.fillStyle=i%3===0?"#6f9861":"#82ad72";X.fillRect(x,y,3,3);
   }
 
-  // 마을을 가로지르는 자연스러운 길
-  path(760,330,570,330,105);
-  path(570,330,430,220,72);
-  path(570,330,430,470,72);
-  path(570,330,800,500,72);
-  path(760,330,1010,330,82);
-  path(430,220,310,150,58);
-  path(430,220,560,145,58);
-  path(430,470,300,515,58);
-  path(800,500,800,570,58);
-  path(800,500,960,505,58);
+  // 중앙 광장을 기준으로 자연스럽게 뻗는 길
+  path(576,324,410,205,70);
+  path(576,324,700,205,70);
+  path(576,324,430,455,70);
+  path(576,324,760,470,70);
+  path(576,324,1050,324,82);
+  path(430,205,285,150,55);
+  path(430,205,555,145,55);
+  path(430,455,300,515,55);
+  path(760,470,900,515,55);
+  path(760,470,600,585,55);
 
-  // 중앙 광장
-  X.fillStyle="#b9a06f";
-  X.beginPath();X.arc(760,330,92,0,Math.PI*2);X.fill();
+  // 중앙 마을 광장
+  X.fillStyle="#b9a06f";X.beginPath();X.arc(576,324,94,0,Math.PI*2);X.fill();
   X.strokeStyle="#8d7650";X.stroke();
 
-  // 건물 그리기
-  building(300,105,145,82,"상점","#a96d4d");
-  building(490,95,145,82,"대장간 / 강화","#66666e");
-  building(645,95,145,82,"농장","#7e9d57");
-  building(175,115,115,78,"가축","#9b704f");
-  building(305,245,145,88,"집","#b47b59");
-  building(485,245,125,88,"제작","#5e91a8");
-  building(640,245,105,78,"퀘스트","#8d6ca8");
+  building(270,105,145,82,"상점","#a96d4d");
+  building(470,95,145,82,"대장간 / 강화","#66666e");
+  building(665,95,145,82,"농장","#7e9d57");
+  building(125,120,115,78,"가축","#9b704f");
+  building(285,245,145,88,"집","#b47b59");
+  building(475,235,125,88,"제작","#5e91a8");
+  building(635,235,115,78,"퀘스트","#8d6ca8");
 
-  // 중앙 마을 회관 느낌의 열린 광장
-  X.fillStyle="#d8c28d";X.fillRect(710,275,100,110);
-  X.strokeStyle="#9b8357";X.strokeRect(710,275,100,110);
-  label("마을",760,330,20);
+  // 중앙 마을
+  X.fillStyle="#d8c28d";X.fillRect(526,274,100,100);
+  X.strokeStyle="#9b8357";X.strokeRect(526,274,100,100);
+  label("마을",576,329,20);
 
-  // 오른쪽 사냥터 방향. 실제 사냥터 맵은 아직 만들지 않는다.
-  gate(1030,330,"사냥터");
+  // 오른쪽 사냥터 방향
+  gate(1060,324,"사냥터");
 
-  // 아래쪽 갈림길. 광산 / 낚시터 / 탑으로 향하는 방향 표시만 한다.
-  signpost(800,500,"갈림길");
-  signpost(420,500,"광산");
-  signpost(800,570,"탑");
-  signpost(960,505,"낚시터");
+  // 아래쪽 갈림길
+  signpost(760,470,"갈림길");
+  signpost(300,515,"광산");
+  signpost(900,515,"낚시터");
+  signpost(600,585,"탑");
 
-  // 집 옆 빈 공간은 아직 미정
-  X.fillStyle="rgba(255,255,255,.12)";
-  X.fillRect(40,360,220,230);
-
-  // 플레이어 시작 위치
-  X.fillStyle="rgba(255,255,255,.25)";
-  X.beginPath();X.arc(760,330,25,0,Math.PI*2);X.fill();
+  // 아직 정하지 않은 공간
+  X.fillStyle="rgba(255,255,255,.10)";
+  X.fillRect(35,350,210,240);
 }
 function building(x,y,w,h,name,roof){
   // 건물 본체
