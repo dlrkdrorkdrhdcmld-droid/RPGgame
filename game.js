@@ -38,59 +38,135 @@ function menu(){panel("메뉴",B("계속","close")+B("상태","st")+B("인벤토
 function equipment(){let h=Object.keys(WD).filter(k=>k!=="fist").map(k=>B(WD[k][0]+" +"+(A.enh[k]||0),"w_"+k)).join("");panel("장비",h+B("강화","en")+B("닫기","close"));for(const k of Object.keys(WD)){let b=document.getElementById("w_"+k);if(b)b.onclick=()=>{if(k==="guardian"&&!A.end)return;A.wep=k;close();check()}}document.getElementById("en").onclick=()=>{enhance();equipment()};document.getElementById("close").onclick=close}
 function achPanel(){panel("업적 "+Object.keys(A.ach).length+"/100",ACH.map((n,i)=>'<div class="stat">#'+(i+1)+" "+n+" "+(A.ach[i+1]?"✓":"")+"</div>").join("")+B("히든","hi")+B("닫기","close"));document.getElementById("hi").onclick=()=>panel("히든",HIDDEN.map((h,i)=>'<div class="stat">'+h[0]+" "+(A.hidden[i+1]?"획득":"???")+"</div>").join("")+B("닫기","close"));document.getElementById("close").onclick=close}
 function savePanel(){panel("저장", [1,2,3,4,5].map(i=>B("슬롯 "+i+" 저장","s"+i)).join("")+B("닫기","close"));for(let i=1;i<6;i++)document.getElementById("s"+i).onclick=()=>{localStorage.setItem("rpg-"+i,JSON.stringify(A));say("저장 완료");close()};document.getElementById("close").onclick=close}
-function village(){panel("마을",B("사냥터","hunt")+B("상점","shop")+B("장비/강화","eq")+B("제작","craft")+B("요리","cook")+B("농장","farm")+B("가축","liv")+B("낚시터","fish")+B("광산","mine")+B("탑","tower")+B("퀘스트","quest")+B("집","house")+B("닫기","close"));document.getElementById("hunt").onclick=()=>{panel("사냥터",["rabbit","zombie","goblin","wolf","slime","thief","golem"].map(k=>B(k,"a_"+k)).join("")+B("닫기","close"));for(const k of ["rabbit","zombie","goblin","wolf","slime","thief","golem"])document.getElementById("a_"+k).onclick=()=>{enter(k);close()};document.getElementById("close").onclick=close};document.getElementById("shop").onclick=shop;document.getElementById("eq").onclick=equipment;document.getElementById("craft").onclick=()=>{craft();close()};document.getElementById("cook").onclick=()=>{cook();close()};document.getElementById("farm").onclick=()=>{enter("farm");close()};document.getElementById("liv").onclick=()=>{panel("가축",B("닭 100G","ch")+B("돼지 200G","pi")+B("소 300G","co")+B("닭 도축","sch")+B("돼지 도축","spi")+B("소 도축","sco")+B("닫기","close"));document.getElementById("ch").onclick=()=>animals("chicken");document.getElementById("pi").onclick=()=>animals("pig");document.getElementById("co").onclick=()=>animals("cow");document.getElementById("sch").onclick=()=>slaughter("chicken");document.getElementById("spi").onclick=()=>slaughter("pig");document.getElementById("sco").onclick=()=>slaughter("cow");document.getElementById("close").onclick=close};document.getElementById("fish").onclick=()=>{enter("fishing");close()};document.getElementById("mine").onclick=()=>{enter("mine");close()};document.getElementById("tower").onclick=()=>{if(Object.keys(A.ach).length>=80||Object.keys(A.hidden).length)enter("tower");else say("업적 80% 또는 히든 업적 필요");close()};document.getElementById("quest").onclick=()=>{A.qd++;A.exp+=50;A.g+=20;A.systems++;lvl();check();close()};document.getElementById("house").onclick=()=>{if(A.house<3){let c=[1000,5000,10000][A.house];if(A.g>=c){A.g-=c;A.house++;check()}}close()};document.getElementById("close").onclick=close}
-function interact(){if(A.area==="village")village();else if(A.area==="mine")mine(),enter("village");else if(A.area==="fishing")fish();else if(A.area==="farm")farm();else if(A.area==="tower"){if(mobs.length===0)setup()}else enter("village")}
-function update(dt){if(modal)return;A.hp=Math.min(hpmax(),A.hp+dt/(A.st.hp>=100?5:10));A.mp=Math.min(mpmax(),A.mp+dt/(A.st.int>=100?.5:1));let dx=0,dy=0;if(K.a)dx--;if(K.d)dx++;if(K.w)dy--;if(K.s)dy++;if(dx||dy){let l=Math.hypot(dx,dy);A.x+=dx/l*spd()*dt;A.y+=dy/l*spd()*dt}if(K[" "])attack();if(K.q)skill();for(const m of mobs){if(m.hp<=0)continue;let d=M[m.t],dx=A.x-m.x,dy=A.y-m.y,di=Math.hypot(dx,dy);if(m.t==="rabbit"){if(di<250&&di>0){m.x-=dx/di*d[4]*40*dt;m.y-=dy/di*d[4]*40*dt;m.x=Math.max(25,Math.min(W-25,m.x));m.y=Math.max(25,Math.min(H-25,m.y))}}else if(m.t==="goblinR"){if(di<180){m.x-=dx/di*d[4]*35*dt;m.y-=dy/di*d[4]*35*dt}}else if(d){if(di>45){m.x+=dx/di*d[4]*35*dt;m.y+=dy/di*d[4]*35*dt}m.cd-=dt;if(di<45&&m.cd<=0){m.cd=1.5;damage(d[2])}}}mobs=mobs.filter(m=>m.hp>0)}
-function rect(x,y,w,h,fill,stroke){X.fillStyle=fill;X.fillRect(x,y,w,h);if(stroke){X.strokeStyle=stroke;X.strokeRect(x,y,w,h)}}function label(t,x,y,size=16,align="center"){X.fillStyle="#fff";X.font=size+"px sans-serif";X.textAlign=align;X.fillText(t,x,y)}function path(x1,y1,x2,y2,w=70){X.strokeStyle="#b89b70";X.lineWidth=w;X.lineCap="round";X.beginPath();X.moveTo(x1,y1);X.lineTo(x2,y2);X.stroke();X.lineWidth=1}function drawVillage(){
-  // 배치도는 시설의 대략적인 위치 관계만 반영하고, 실제 지형은 자연스럽게 구성한다.
-  X.fillStyle="#7aa66a";X.fillRect(0,0,W,H);
-
-  for(let i=0;i<70;i++){
-    const x=(i*173)%W, y=(i*97)%H;
-    X.fillStyle=i%3===0?"#6f9861":"#82ad72";X.fillRect(x,y,3,3);
+function questBoard(){
+  panel("퀘스트 게시판",
+    "<p>의뢰 4개가 게시되어 있습니다.</p>"+
+    B("의뢰 1 · 사냥 의뢰","q1")+
+    B("의뢰 2 · 사냥 의뢰","q2")+
+    B("의뢰 3 · 사냥 의뢰","q3")+
+    B("의뢰 4 · 배달 의뢰","q4")+
+    B("닫기","close"));
+  for(const id of ["q1","q2","q3","q4"]){
+    document.getElementById(id).onclick=()=>{
+      A.qd++;
+      A.exp+=50;
+      A.g+=20;
+      A.systems++;
+      lvl();
+      check();
+      say("퀘스트를 수락했습니다.");
+      close();
+    };
+  }
+  document.getElementById("close").onclick=close;
+}
+function village(){
+  // 현재 마을에서 실제로 배치된 시설만 표시한다.
+  panel("마을",
+    B("사냥터","hunt")+
+    B("상점","shop")+
+    B("장비/강화","eq")+
+    B("제작","craft")+
+    B("퀘스트 게시판","quest")+
+    B("닫기","close"));
+  document.getElementById("hunt").onclick=()=>{
+    panel("사냥터",
+      ["rabbit","zombie","goblin","wolf","slime","thief","golem"].map(k=>B(k,"a_"+k)).join("")+
+      B("닫기","close"));
+    for(const k of ["rabbit","zombie","goblin","wolf","slime","thief","golem"])
+      document.getElementById("a_"+k).onclick=()=>{enter(k);close()};
+    document.getElementById("close").onclick=close;
+  };
+  document.getElementById("shop").onclick=shop;
+  document.getElementById("eq").onclick=equipment;
+  document.getElementById("craft").onclick=()=>{craft();close()};
+  document.getElementById("quest").onclick=questBoard;
+  document.getElementById("close").onclick=close;
+}
+function near(x,y,r=75){return Math.hypot(A.x-x,A.y-y)<=r}
+function interact(){
+  if(A.area!=="village"){
+    if(A.area==="mine")mine(),enter("village");
+    else if(A.area==="fishing")fish();
+    else if(A.area==="farm")farm();
+    else if(A.area==="tower"){if(mobs.length===0)setup()}
+    else enter("village");
+    return;
   }
 
-  // 중앙 광장을 기준으로 자연스럽게 뻗는 길
-  path(576,324,410,205,70);
-  path(576,324,700,205,70);
-  path(576,324,430,455,70);
-  path(576,324,760,470,70);
-  path(576,324,1050,324,82);
-  path(430,205,285,150,55);
-  path(430,205,555,145,55);
-  path(430,455,300,515,55);
-  path(760,470,900,515,55);
-  path(760,470,600,585,55);
+  // 이미지에 실제로 표시된 시설만 상호작용한다.
+  if(near(340,145,95)){shop();return}                 // 상점
+  if(near(540,140,95)){equipment();return}           // 대장간
+  if(near(230,575,90)){craft();return}               // 제작대
+  if(near(1010,590,95)){questBoard();return}         // 갈림길 오른쪽 퀘스트 게시판
+  if(near(1080,325,75)){                              // 사냥터
+    panel("사냥터",
+      ["rabbit","zombie","goblin","wolf","slime","thief","golem"].map(k=>B(k,"a_"+k)).join("")+
+      B("닫기","close"));
+    for(const k of ["rabbit","zombie","goblin","wolf","slime","thief","golem"])
+      document.getElementById("a_"+k).onclick=()=>{enter(k);close()};
+    document.getElementById("close").onclick=close;
+    return;
+  }
+  say("이곳에서는 할 수 있는 일이 없습니다.");
+}
+function update(dt){if(modal)return;A.hp=Math.min(hpmax(),A.hp+dt/(A.st.hp>=100?5:10));A.mp=Math.min(mpmax(),A.mp+dt/(A.st.int>=100?.5:1));let dx=0,dy=0;if(K.a)dx--;if(K.d)dx++;if(K.w)dy--;if(K.s)dy++;if(dx||dy){let l=Math.hypot(dx,dy);A.x+=dx/l*spd()*dt;A.y+=dy/l*spd()*dt}if(K[" "])attack();if(K.q)skill();for(const m of mobs){if(m.hp<=0)continue;let d=M[m.t],dx=A.x-m.x,dy=A.y-m.y,di=Math.hypot(dx,dy);if(m.t==="rabbit"){if(di<250&&di>0){m.x-=dx/di*d[4]*40*dt;m.y-=dy/di*d[4]*40*dt;m.x=Math.max(25,Math.min(W-25,m.x));m.y=Math.max(25,Math.min(H-25,m.y))}}else if(m.t==="goblinR"){if(di<180){m.x-=dx/di*d[4]*35*dt;m.y-=dy/di*d[4]*35*dt}}else if(d){if(di>45){m.x+=dx/di*d[4]*35*dt;m.y+=dy/di*d[4]*35*dt}m.cd-=dt;if(di<45&&m.cd<=0){m.cd=1.5;damage(d[2])}}}mobs=mobs.filter(m=>m.hp>0)}
+function rect(x,y,w,h,fill,stroke){X.fillStyle=fill;X.fillRect(x,y,w,h);if(stroke){X.strokeStyle=stroke;X.strokeRect(x,y,w,h)}}function label(t,x,y,size=16,align="center"){X.fillStyle="#fff";X.font=size+"px sans-serif";X.textAlign=align;X.fillText(t,x,y)}function path(x1,y1,x2,y2,w=70){X.strokeStyle="#b89b70";X.lineWidth=w;X.lineCap="round";X.beginPath();X.moveTo(x1,y1);X.lineTo(x2,y2);X.stroke();X.lineWidth=1}function drawVillage(){
+  // 사용자가 보내준 배치에서 표시된 시설만 구현한다.
+  // 위치 관계만 따르고, 실제 마을은 자연스러운 지형으로 표현한다.
+  X.fillStyle="#79a568";X.fillRect(0,0,W,H);
 
-  // 중앙 마을 광장
-  X.fillStyle="#b9a06f";X.beginPath();X.arc(576,324,94,0,Math.PI*2);X.fill();
-  X.strokeStyle="#8d7650";X.stroke();
+  // 잔디 장식
+  for(let i=0;i<80;i++){
+    const x=(i*149)%W, y=(i*83)%H;
+    X.fillStyle=i%2?"#82ad70":"#6e995e";
+    X.fillRect(x,y,3,3);
+  }
 
-  building(270,105,145,82,"상점","#a96d4d");
-  building(470,95,145,82,"대장간 / 강화","#66666e");
-  building(665,95,145,82,"농장","#7e9d57");
-  building(125,120,115,78,"가축","#9b704f");
-  building(285,245,145,88,"집","#b47b59");
-  building(475,235,125,88,"제작","#5e91a8");
-  building(635,235,115,78,"퀘스트","#8d6ca8");
+  // 큰길과 갈림길
+  path(575,330,575,150,72);
+  path(575,330,350,330,72);
+  path(575,330,1080,330,82);
+  path(575,330,575,560,72);
+  path(575,560,760,620,62);
+  path(575,560,360,560,62);
 
-  // 중앙 마을
-  X.fillStyle="#d8c28d";X.fillRect(526,274,100,100);
-  X.strokeStyle="#9b8357";X.strokeRect(526,274,100,100);
-  label("마을",576,329,20);
+  // 상점: 왼쪽 위
+  building(135,45,290,125,"상점","#d98cae");
 
-  // 오른쪽 사냥터 방향
-  gate(1060,324,"사냥터");
+  // 대장간: 위쪽
+  building(540,45,420,130,"대장간","#4caf66");
 
-  // 아래쪽 갈림길
-  signpost(760,470,"갈림길");
-  signpost(300,515,"광산");
-  signpost(900,515,"낚시터");
-  signpost(600,585,"탑");
+  // 집: 왼쪽 가장자리
+  building(22,195,55,245,"집","#e5c54a");
 
-  // 아직 정하지 않은 공간
-  X.fillStyle="rgba(255,255,255,.10)";
-  X.fillRect(35,350,210,240);
+  // 제작대: 왼쪽 아래
+  building(165,475,110,180,"제작대","#a96d4d");
+
+  // 오른쪽 사냥터 입구
+  gate(1100,330,"사냥터");
+
+  // 아래 갈림길
+  signpost(575,585,"갈림길");
+
+  // 갈림길 오른쪽의 퀘스트 게시판
+  questSign(840,585);
+
+  // 플레이어 시작 위치는 마을 중앙
+  X.fillStyle="rgba(255,255,255,.25)";
+  X.beginPath();X.arc(575,330,25,0,Math.PI*2);X.fill();
+}
+function questSign(x,y){
+  X.fillStyle="#684936";
+  X.fillRect(x-5,y-35,10,65);
+  X.fillStyle="#d8c08a";
+  X.fillRect(x-70,y-72,140,40);
+  X.strokeStyle="#5c422f";
+  X.lineWidth=3;
+  X.strokeRect(x-70,y-72,140,40);
+  label("퀘스트 게시판",x,y-47,13);
+  label("F",x,y-17,12);
+  X.lineWidth=1;
 }
 function building(x,y,w,h,name,roof){
   // 건물 본체
