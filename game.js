@@ -82,10 +82,10 @@ function menu(){
   document.getElementById("ac").onclick=achPanel;
   document.getElementById("sv").onclick=savePanel;
 }
-function equipment(){let owned=A.weapons||[];let h=owned.map(k=>B(WD[k][0]+" +"+(A.enh[k]||0),"w_"+k)).join("");if(A.wep!=="fist"&&!owned.includes(A.wep))A.wep="fist";panel("장비",h||"<p>보유한 무기가 없습니다.</p>"+B("닫기","close"));for(const k of owned){let b=document.getElementById("w_"+k);if(b)b.onclick=()=>{A.wep=k;close();check()}}document.getElementById("close").onclick=close}
+function equipment(){let owned=A.weapons||[];let h=owned.map(k=>B(WD[k][0]+" +"+(A.enh[k]||0),"w_"+k)).join("");if(A.wep!=="fist"&&!owned.includes(A.wep))A.wep="fist";panel("장비",(h||"<p>보유한 무기가 없습니다.</p>")+B("닫기","close"));for(const k of owned){let b=document.getElementById("w_"+k);if(b)b.onclick=()=>{A.wep=k;close();check()}}document.getElementById("close").onclick=close}
 function enhanceWeapon(k){let l=A.enh[k]||0;if(!A.weapons?.includes(k))return say("보유하지 않은 무기입니다.");if(l>=99)return say("이미 +99입니다.");let cost=Math.floor(100*(l<10?1:l<20?1.05:l<30?1.1:l<40?1.12:l<50?1.15:l<60?1.18:l<70?1.25:l<80?1.27:1.3));if(A.g<cost)return say("골드 부족");A.g-=cost;if(Math.random()<(l?Math.pow(.95,l):1))A.enh[k]=l+1;else if(l>=10&&Math.random()<.025)A.enh[k]=l-1;else if(l>=20&&Math.random()<.00625){delete A.enh[k];A.destroy++}check()}
 function blacksmithEnhancePanel(k){let l=A.enh[k]||0;panel("강화","<p>"+WD[k][0]+" +"+l+"</p>"+B("강화","doEnh")+B("닫기","close"));document.getElementById("doEnh").onclick=()=>{enhanceWeapon(k);blacksmithEnhancePanel(k)};document.getElementById("close").onclick=close}
-function blacksmithPanel(){let owned=A.weapons||[];panel("대장간",owned.length?owned.map(k=>B(WD[k][0]+" +"+(A.enh[k]||0),"bs_"+k)).join(""):"<p>강화할 무기가 없습니다.</p>"+B("닫기","close"));for(const k of owned){let b=document.getElementById("bs_"+k);if(b)b.onclick=()=>blacksmithEnhancePanel(k)}document.getElementById("close").onclick=close}
+function blacksmithPanel(){let owned=A.weapons||[];panel("대장간",(owned.length?owned.map(k=>B(WD[k][0]+" +"+(A.enh[k]||0),"bs_"+k)).join(""):"<p>강화할 무기가 없습니다.</p>")+B("닫기","close"));for(const k of owned){let b=document.getElementById("bs_"+k);if(b)b.onclick=()=>blacksmithEnhancePanel(k)}document.getElementById("close").onclick=close}
 function achPanel(){
   let body=ACH.map((n,i)=>'<div class="stat">#'+(i+1)+" "+n+" "+(A.ach[i+1]?"✓":"")+"</div>").join("");
   if(Object.keys(A.hidden).length>0)body+=B("히든","hi");
