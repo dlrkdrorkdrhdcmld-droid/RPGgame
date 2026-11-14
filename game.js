@@ -91,14 +91,34 @@ function achPanel(){
 }
 function savePanel(){panel("저장", [1,2,3,4,5].map(i=>B("슬롯 "+i+" 저장","s"+i)).join("")+B("닫기","close"));for(let i=1;i<6;i++)document.getElementById("s"+i).onclick=()=>{localStorage.setItem("rpg-"+i,JSON.stringify(A));say("저장 완료");close()};document.getElementById("close").onclick=close}
 function questBoard(){
+  const qs=[
+    ["q1","의뢰 1 · 사냥 의뢰"],
+    ["q2","의뢰 2 · 사냥 의뢰"],
+    ["q3","의뢰 3 · 사냥 의뢰"],
+    ["q4","의뢰 4 · 배달 의뢰"]
+  ];
   panel("퀘스트 게시판",
     "<p>의뢰 4개가 게시되어 있습니다.</p>"+
-    "<div class=\"stat\">의뢰 1 · 사냥 의뢰<br>내용: 상세 조건 미정</div>"+
-    "<div class=\"stat\">의뢰 2 · 사냥 의뢰<br>내용: 상세 조건 미정</div>"+
-    "<div class=\"stat\">의뢰 3 · 사냥 의뢰<br>내용: 상세 조건 미정</div>"+
-    "<div class=\"stat\">의뢰 4 · 배달 의뢰<br>내용: 상세 조건 미정</div>"+
-    "<p>현재는 퀘스트의 세부 조건이 확정되지 않아 자동 성공 처리하지 않습니다.</p>"+
+    qs.map(q=>B(q[1],q[0])).join("")+
     B("닫기","close"));
+  for(const [id,title] of qs){
+    document.getElementById(id).onclick=()=>{
+      panel(title,
+        "<p>퀘스트 상세 조건은 현재 미정입니다.</p>"+
+        "<p>수락한 퀘스트는 조건을 달성했을 때 성공 처리됩니다.</p>"+
+        B("수락","acceptQuest")+B("뒤로","backQuest"));
+      document.getElementById("acceptQuest").onclick=()=>{
+        A.quests=A.quests||[];
+        if(!A.quests.includes(id))A.quests.push(id);
+        A.qd++;
+        A.systems++;
+        check();
+        say("퀘스트를 수락했습니다.");
+        close();
+      };
+      document.getElementById("backQuest").onclick=questBoard;
+    };
+  }
   document.getElementById("close").onclick=close;
 }
 function village(){
@@ -279,24 +299,23 @@ function outlineNode(x,y,w,h,color){
   X.fillStyle="#111";X.beginPath();X.roundRect(38,240,65,250,18);X.fill();
 
 }function drawCrossroads(){
-  X.fillStyle="#000000";X.fillRect(0,0,W,H);
+  X.fillStyle="#ffffff";X.fillRect(0,0,W,H);
 
   // 갈림길 외곽
   X.strokeStyle="#e5c43b";X.lineWidth=3;X.strokeRect(65,35,W-130,H-70);X.lineWidth=1;
 
-  // 하얀색: 마을 방향
-  X.strokeStyle="#eeeeee";X.lineWidth=4;X.beginPath();
-  X.roundRect(255,85,280,95,16);X.stroke();
+  // 마을로 돌아가는 방향은 검은색
+  X.fillStyle="#000000";X.beginPath();X.roundRect(255,85,280,95,16);X.fill();
 
-  // 회색: 광산
-  X.strokeStyle="#777777";X.beginPath();
+  // 광산
+  X.strokeStyle="#777777";X.lineWidth=4;X.beginPath();
   X.roundRect(95,175,90,245,12);X.stroke();
 
-  // 파란색: 낚시터
+  // 낚시터
   X.strokeStyle="#1746b8";X.beginPath();
   X.roundRect(930,165,90,245,12);X.stroke();
 
-  // 하늘색: 탑
+  // 탑
   X.strokeStyle="#19cfe0";X.beginPath();
   X.roundRect(275,430,250,105,16);X.stroke();
 
