@@ -1,4 +1,4 @@
-const C=document.getElementById("game"),X=C.getContext("2d"),W=1152,H=648,K={},A={area:"village",x:576,y:324,lv:1,exp:0,next:100,g:0,pts:6,st:{atk:0,def:0,hp:0,int:0,agi:0,luk:0},hp:100,mp:100,wep:"fist",enh:{},inv:{},eq:{head:null,armor:null,pants:null,shoes:null},house:0,animals:{chicken:0,pig:0,cow:0},farm:{},quests:[],qd:0,ach:{},hidden:{},kills:{},tower:0,end:false,weapons:[],dead:0,cook:0,fish:0,mine:0,harvest:0,craft:0,attack:0,buy:0,sell:0,slaughter:0,destroy:0,systems:0};
+const C=document.getElementById("game"),X=C.getContext("2d"),W=1152,H=648,K={},A={area:"village",x:576,y:324,lv:1,exp:0,next:10,g:0,pts:6,st:{atk:0,def:0,hp:0,int:0,agi:0,luk:0},hp:100,mp:100,wep:"fist",enh:{},inv:{},eq:{head:null,armor:null,pants:null,shoes:null},house:0,animals:{chicken:0,pig:0,cow:0},farm:{},quests:[],qd:0,ach:{},hidden:{},kills:{},tower:0,end:false,weapons:[],dead:0,cook:0,fish:0,mine:0,harvest:0,craft:0,attack:0,buy:0,sell:0,slaughter:0,destroy:0,systems:0};
 const WD={fist:["주먹",0,.5,55],club:["나무 몽둥이",1,.7,70],sword:["검",20,1,80],greatsword:["대검",60,5,115],dagger:["단검",10,.6,60],spear:["창",40,3,125],bow:["활",15,1.5,300],shield:["방패",1,1,65],guardian:["수호자의 무기",300,2,145]};
 const M={rabbit:["토끼",10,0,0,.7,1],zombie:["좀비",100,10,10,.9,10],goblin:["고블린",100,10,10,1,20],goblinR:["원거리 고블린",90,10,0,.5,25],wolf:["늑대",150,15,5,1.2,50],slime:["폭발 슬라임",70,150,0,1.3,100],thief:["도적",100,30,15,2,125],golem:["골렘",300,200,20,.5,200]};
 const drops={rabbit:[["rabbit_meat",.5],["leather",.3]],zombie:[["zombie_arm",.5],["zombie_leg",.5],["old_cloth",.3]],goblin:[["goblin_ear",.4],["dagger_item",.15]],goblinR:[["goblin_ear",.4]],wolf:[["leather",.3],["wolf_fang",.35]],slime:[["explosive_core",.25],["slime",.6]],thief:[["dagger_item",.15]],golem:[["iron",.3],["copper",.3],["silver",.25],["gold",.25],["mithril",.2],["magic_stone",.1]]};
@@ -8,7 +8,7 @@ const HIDDEN=[["99강화나무몽둥이","나무 몽둥이 +99"],["허접","사�
 let mobs=[],shots=[],modal=0,msg="",mt=0,last=performance.now(),atkT=0,huntSpawnTimer=10;
 const say=t=>{msg=t;mt=performance.now()+2200},has=(k,n=1)=>(A.inv[k]||0)>=n,add=(k,n=1)=>{A.inv[k]=(A.inv[k]||0)+n;if(A.inv[k]<=0)delete A.inv[k]};
 const hpmax=()=>100+A.st.hp*5,mpmax=()=>100+A.st.int*5,spd=()=>225*(1+A.st.agi*.01),WEP=()=>WD[A.wep],watk=()=>WEP()[1]+(A.enh[A.wep]||0);
-function lvl(){while(A.lv<50&&A.exp>=A.next){A.exp-=A.next;A.lv++;A.pts+=6;A.next=Math.floor(A.next*(A.lv<20?1.5:A.lv<30?1.25:1.15));A.hp=hpmax();A.mp=mpmax();say("레벨 업! Lv."+A.lv)}}
+function lvl(){while(A.lv<50&&A.exp>=A.next){A.exp-=A.next;A.lv++;A.pts+=6;A.next=Math.floor(A.next*(A.lv<20?1.5:A.lv<35?1.2:A.lv<45?1.25:1.4));A.hp=hpmax();A.mp=mpmax();say("레벨 업! Lv."+A.lv)}}
 function spawn(t,x=80+Math.random()*990,y=70+Math.random()*530){if(t==="boss"){mobs.push({t,x,y,hp:2000,max:2000,cd:0,f:0});return}let d=M[t];if(!d)return;mobs.push({t,x,y,hp:d[1],max:d[1],cd:Math.random(),f:0})}
 const HUNT={x:570,y:60,w:560,h:560};
 function spawnHuntMonster(){
