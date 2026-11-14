@@ -51,7 +51,18 @@ function ach(i){if(A.ach[i])return;A.ach[i]=1;A.pts+=i===99||i===100?10:i===10||
 function buy(k){let p=I[k]?.[1]||0;if(A.g<p)return say("골드 부족");A.g-=p;add(k);A.buy++;check()}
 function sell(k){if(!has(k))return;A.g+=I[k]?.[1]||0;add(k,-1);A.sell++;check()}
 function enhance(){let l=A.enh[A.wep]||0;if(A.wep==="fist"||l>=99)return;let cost=Math.floor(100*(l<10?1:l<20?1.05:l<30?1.1:l<40?1.12:l<50?1.15:l<60?1.18:l<70?1.25:l<80?1.27:1.3));if(A.g<cost)return say("골드 부족");A.g-=cost;if(Math.random()<(l?Math.pow(.95,l):1))A.enh[A.wep]=l+1;else if(l>=10&&Math.random()<.025)A.enh[A.wep]=l-1;else if(l>=20&&Math.random()<.00625){delete A.enh[A.wep];A.destroy++}check()}
-function craft(){if(has("leather",10)){add("leather",-10);add("leather_armor");A.craft++;A.systems++;say("장비 제작")}else say("가죽 10개 필요")}
+function craft(){
+  if(has("leather",10)){add("leather",-10);add("leather_armor");A.craft++;A.systems++;say("장비 제작")}
+  else say("가죽 10개 필요")
+}
+function craftPanel(){
+  panel("제작대",
+    "<p>제작할 장비를 선택하세요.</p>"+
+    B("가죽 장비 제작","make_armor")+
+    B("닫기","close"));
+  document.getElementById("make_armor").onclick=()=>{craft();craftPanel()};
+  document.getElementById("close").onclick=close;
+}
 function cook(){if(has("wheat",2)){add("wheat",-2);add("bread");A.cook++;A.systems++;A.mp=Math.min(mpmax(),A.mp+30);check()}else say("밀 2개 필요")}
 function mine(){if(!has("pickaxe"))return say("곡괭이 필요");let o=["iron","copper","silver","gold","mithril","magic_stone"],p=[.3,.25,.15,.12,.1,.08],r=Math.random(),s=0;for(let i=0;i<o.length;i++){s+=p[i];if(r<s){add(o[i]);break}}A.mine++;A.systems++;check()}
 function fish(){if(!has("rod"))return say("낚싯대 필요");let o=["minnow","crucian","salmon","mackerel","rock_bream"],p=[.4,.3,.2,.07,.03],r=Math.random(),s=0;for(let i=0;i<o.length;i++){s+=p[i];if(r<s){add(o[i]);break}}A.fish++;A.systems++;check()}
@@ -62,30 +73,32 @@ function B(t,id){return'<button id="'+id+'">'+t+"</button>"}function panel(t,b){
 function invPanel(){let h=Object.entries(A.inv).filter(x=>x[1]>0).map(x=>'<div class="stat">'+(I[x[0]]?.[0]||x[0])+" ×"+x[1]+"</div>").join("");panel("인벤토리",h+B("닫기","close"));document.getElementById("close").onclick=close}
 function status(){let h=Object.entries(A.st).map(x=>'<div class="stat">'+x[0].toUpperCase()+" "+x[1]+B("+","p_"+x[0])+"</div>").join("");panel("상태","<p>Lv."+A.lv+" EXP "+A.exp+"/"+A.next+" G "+A.g+" · 포인트 "+A.pts+"</p>"+h+B("닫기","close"));for(const k in A.st)document.getElementById("p_"+k).onclick=()=>{if(A.pts&&A.st[k]<100){A.pts--;A.st[k]++;A.hp=hpmax();A.mp=mpmax();status()}};document.getElementById("close").onclick=close}
 function shop(){let ks=["low_hp","hp","high_hp","elixir","low_mp","mp","high_mp","rod","pickaxe","wheat_seed","carrot_seed","potato_seed","rice_seed","vegetable_seed"];panel("상점",ks.map(k=>B(I[k][0]+" "+I[k][1]+"G","b_"+k)).join("")+B("판매","sell")+B("닫기","close"));ks.forEach(k=>document.getElementById("b_"+k).onclick=()=>buy(k));document.getElementById("sell").onclick=()=>{let h=Object.keys(A.inv).map(k=>B(I[k]?.[0]||k,"s_"+k)).join("");panel("판매",h+B("닫기","close"));for(const k of Object.keys(A.inv)){let b=document.getElementById("s_"+k);if(b)b.onclick=()=>sell(k)}document.getElementById("close").onclick=close};document.getElementById("close").onclick=close}
-function menu(){panel("메뉴",B("계속","close")+B("상태","st")+B("인벤토리","iv")+B("상점","sh")+B("장비","eq")+B("업적","ac")+B("저장","sv"));document.getElementById("close").onclick=close;document.getElementById("st").onclick=status;document.getElementById("iv").onclick=invPanel;document.getElementById("sh").onclick=shop;document.getElementById("eq").onclick=equipment;document.getElementById("ac").onclick=achPanel;document.getElementById("sv").onclick=savePanel}
+function menu(){
+  panel("메뉴",B("계속","close")+B("인벤토리","iv")+B("업적","ac")+B("저장","sv"));
+  document.getElementById("close").onclick=close;
+  document.getElementById("iv").onclick=invPanel;
+  document.getElementById("ac").onclick=achPanel;
+  document.getElementById("sv").onclick=savePanel;
+}
 function equipment(){let h=Object.keys(WD).filter(k=>k!=="fist").map(k=>B(WD[k][0]+" +"+(A.enh[k]||0),"w_"+k)).join("");panel("장비",h+B("강화","en")+B("닫기","close"));for(const k of Object.keys(WD)){let b=document.getElementById("w_"+k);if(b)b.onclick=()=>{if(k==="guardian"&&!A.end)return;A.wep=k;close();check()}}document.getElementById("en").onclick=()=>{enhance();equipment()};document.getElementById("close").onclick=close}
-function achPanel(){panel("업적 "+Object.keys(A.ach).length+"/100",ACH.map((n,i)=>'<div class="stat">#'+(i+1)+" "+n+" "+(A.ach[i+1]?"✓":"")+"</div>").join("")+B("히든","hi")+B("닫기","close"));document.getElementById("hi").onclick=()=>panel("히든",HIDDEN.map((h,i)=>'<div class="stat">'+h[0]+" "+(A.hidden[i+1]?"획득":"???")+"</div>").join("")+B("닫기","close"));document.getElementById("close").onclick=close}
+function achPanel(){
+  let body=ACH.map((n,i)=>'<div class="stat">#'+(i+1)+" "+n+" "+(A.ach[i+1]?"✓":"")+"</div>").join("");
+  if(Object.keys(A.hidden).length>0)body+=B("히든","hi");
+  body+=B("닫기","close");
+  panel("업적 "+Object.keys(A.ach).length+"/100",body);
+  if(document.getElementById("hi"))document.getElementById("hi").onclick=()=>panel("히든",HIDDEN.map((h,i)=>'<div class="stat">'+h[0]+" "+(A.hidden[i+1]?"획득":"???")+"</div>").join("")+B("닫기","close"));
+  document.getElementById("close").onclick=close;
+}
 function savePanel(){panel("저장", [1,2,3,4,5].map(i=>B("슬롯 "+i+" 저장","s"+i)).join("")+B("닫기","close"));for(let i=1;i<6;i++)document.getElementById("s"+i).onclick=()=>{localStorage.setItem("rpg-"+i,JSON.stringify(A));say("저장 완료");close()};document.getElementById("close").onclick=close}
 function questBoard(){
   panel("퀘스트 게시판",
     "<p>의뢰 4개가 게시되어 있습니다.</p>"+
-    B("의뢰 1 · 사냥 의뢰","q1")+
-    B("의뢰 2 · 사냥 의뢰","q2")+
-    B("의뢰 3 · 사냥 의뢰","q3")+
-    B("의뢰 4 · 배달 의뢰","q4")+
+    "<div class=\"stat\">의뢰 1 · 사냥 의뢰<br>내용: 상세 조건 미정</div>"+
+    "<div class=\"stat\">의뢰 2 · 사냥 의뢰<br>내용: 상세 조건 미정</div>"+
+    "<div class=\"stat\">의뢰 3 · 사냥 의뢰<br>내용: 상세 조건 미정</div>"+
+    "<div class=\"stat\">의뢰 4 · 배달 의뢰<br>내용: 상세 조건 미정</div>"+
+    "<p>현재는 퀘스트의 세부 조건이 확정되지 않아 자동 성공 처리하지 않습니다.</p>"+
     B("닫기","close"));
-  for(const id of ["q1","q2","q3","q4"]){
-    document.getElementById(id).onclick=()=>{
-      A.qd++;
-      A.exp+=50;
-      A.g+=20;
-      A.systems++;
-      lvl();
-      check();
-      say("퀘스트를 수락했습니다.");
-      close();
-    };
-  }
   document.getElementById("close").onclick=close;
 }
 function village(){
@@ -107,7 +120,7 @@ function village(){
   };
   document.getElementById("shop").onclick=shop;
   document.getElementById("eq").onclick=equipment;
-  document.getElementById("craft").onclick=()=>{craft();close()};
+  document.getElementById("craft").onclick=craftPanel;
   document.getElementById("quest").onclick=questBoard;
   document.getElementById("close").onclick=close;
 }
@@ -139,7 +152,7 @@ function interact(){
   if(nearRect(127,33,291,130)){shop();return;}
   if(nearRect(536,35,418,133)){equipment();return;}
   if(nearRect(22,165,36,208)){say("집");return;}
-  if(nearRect(140,412,90,154)){craft();return;}
+  if(nearRect(140,412,90,154)){craftPanel();return;}
 
   if(nearRect(1080,202,45,265)){
     panel("사냥터",
@@ -265,8 +278,6 @@ function outlineNode(x,y,w,h,color){
   // 왼쪽 마을 이동 포탈
   X.fillStyle="#111";X.beginPath();X.roundRect(38,240,65,250,18);X.fill();
 
-  // 몬스터 스폰 구역
-  X.strokeStyle="#ff8c00";X.lineWidth=12;X.beginPath();X.roundRect(570,65,620,555,24);X.stroke();X.lineWidth=1;
 }function drawCrossroads(){
   X.fillStyle="#000000";X.fillRect(0,0,W,H);
 
